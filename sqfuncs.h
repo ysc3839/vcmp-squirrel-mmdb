@@ -5,9 +5,9 @@ static SQRESULT from_entry_data_list(HSQUIRRELVM v, MMDB_entry_data_list_s **ent
 
 static SQRESULT from_map(HSQUIRRELVM v, MMDB_entry_data_list_s **entry_data_list)
 {
-	sq->newtable(v); // push new table
-
 	const uint32_t map_size = (*entry_data_list)->entry_data.data_size;
+	sq->newtableex(v, map_size); // push new table
+
 	for (uint32_t i = 0; i < map_size && entry_data_list; ++i)
 	{
 		*entry_data_list = (*entry_data_list)->next;
