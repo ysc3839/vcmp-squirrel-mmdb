@@ -48,6 +48,48 @@ static SQRESULT from_array(HSQUIRRELVM v, MMDB_entry_data_list_s **entry_data_li
 	return 1; // return array
 }
 
+static SQRESULT from_bytes(HSQUIRRELVM v, MMDB_entry_data_list_s* entry_data_list)
+{
+	const uint32_t data_size = entry_data_list->entry_data.data_size;
+	SQUserPointer buf = sq->std_createblob(v, data_size); // push new blob
+	memcpy(buf, entry_data_list->entry_data.bytes, data_size);
+	return 1;
+}
+
+static SQRESULT from_uint64(HSQUIRRELVM v, MMDB_entry_data_list_s* entry_data_list)
+{
+	sq->newarray(v, 0); // push new array
+
+	sq->pushstring(v, _SC("UINT64"), -1);
+	sq->arrayappend(v, -2); // pop value and push to array
+
+	const uint32_t data_size = sizeof(entry_data_list->entry_data.uint64);
+	SQUserPointer buf = sq->std_createblob(v, data_size); // push new blob
+	memcpy(buf, &entry_data_list->entry_data.uint64, data_size);
+	sq->arrayappend(v, -2); // pop value and push to array
+
+	return 1; // return array ["UINT64", blob]
+}
+
+static SQRESULT from_uint128(HSQUIRRELVM v, MMDB_entry_data_list_s* entry_data_list)
+{
+	sq->newarray(v, 0); // push new array
+
+	sq->pushstring(v, _SC("UINT128"), -1);
+	sq->arrayappend(v, -2); // pop value and push to array
+
+	const uint32_t data_size = sizeof(entry_data_list->entry_data.uint128);
+	SQUserPointer buf = sq->std_createblob(v, data_size); // push new blob
+#if MMDB_UINT128_IS_BYTE_ARRAY
+	memcpy(buf, entry_data_list->entry_data.uint128, data_size);
+#else
+	memcpy(buf, &entry_data_list->entry_data.uint128, data_size);
+#endif
+	sq->arrayappend(v, -2); // pop value and push to array
+
+	return 1; // return array ["UINT128", blob]
+}
+
 static SQRESULT from_entry_data_list(HSQUIRRELVM v, MMDB_entry_data_list_s **entry_data_list)
 {
 	if (entry_data_list == NULL || *entry_data_list == NULL)
@@ -64,13 +106,8 @@ static SQRESULT from_entry_data_list(HSQUIRRELVM v, MMDB_entry_data_list_s **ent
 	case MMDB_DATA_TYPE_UTF8_STRING:
 		sq->pushstring(v, (*entry_data_list)->entry_data.utf8_string, (*entry_data_list)->entry_data.data_size);
 		return 1;
-	case MMDB_DATA_TYPE_BYTES: // FIXME
-		output_console_message("warning: MMDB_DATA_TYPE_BYTES is not implemented.");
-		sq->pushnull(v);
-		return 1;
-		/*return PyByteArray_FromStringAndSize(
-			(const char *)(*entry_data_list)->entry_data.bytes,
-			(Py_ssize_t)(*entry_data_list)->entry_data.data_size);*/
+	case MMDB_DATA_TYPE_BYTES:
+		return from_bytes(v, *entry_data_list);
 	case MMDB_DATA_TYPE_DOUBLE:
 		sq->pushfloat(v, (SQFloat)(*entry_data_list)->entry_data.double_value);
 		return 1;
@@ -86,17 +123,10 @@ static SQRESULT from_entry_data_list(HSQUIRRELVM v, MMDB_entry_data_list_s **ent
 	case MMDB_DATA_TYPE_BOOLEAN:
 		sq->pushbool(v, (*entry_data_list)->entry_data.boolean);
 		return 1;
-	case MMDB_DATA_TYPE_UINT64: // FIXME
-		output_console_message("warning: MMDB_DATA_TYPE_UINT64 is not implemented.");
-		sq->pushnull(v);
-		return 1;
-		/*return PyLong_FromUnsignedLongLong(
-			(*entry_data_list)->entry_data.uint64);*/
-	case MMDB_DATA_TYPE_UINT128: // FIXME
-		output_console_message("warning: MMDB_DATA_TYPE_UINT128 is not implemented.");
-		sq->pushnull(v);
-		return 1;
-		//return from_uint128(*entry_data_list);
+	case MMDB_DATA_TYPE_UINT64:
+		return from_uint64(v, *entry_data_list);
+	case MMDB_DATA_TYPE_UINT128:
+		return from_uint128(v, *entry_data_list);
 	case MMDB_DATA_TYPE_INT32:
 		sq->pushinteger(v, (*entry_data_list)->entry_data.int32);
 		return 1;
