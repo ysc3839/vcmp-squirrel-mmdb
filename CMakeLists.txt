@@ -5,6 +5,7 @@ include(maxminddb.cmake)
 
 add_library(${PROJECT_NAME} SHARED main.c)
 target_link_libraries(${PROJECT_NAME} PRIVATE maxminddb)
+target_include_directories(${PROJECT_NAME} PRIVATE squirrel)
 
 math(EXPR _CMAKE_BITS "${CMAKE_SIZEOF_VOID_P} * 8")
 
