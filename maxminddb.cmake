@@ -9,7 +9,7 @@ if(UNIX)
 		maxminddb-ext
 		URL ${MMDB_URL}
 		URL_HASH ${MMDB_URL_HASH}
-		CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR> --disable-shared --enable-static
+		CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR> --disable-shared --enable-static --with-pic
 		BUILD_IN_SOURCE 1
 	)
 
