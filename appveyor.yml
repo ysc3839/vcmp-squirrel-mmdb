@@ -1,0 +1,60 @@
+version: "{build}"
+skip_non_tags: true
+image:
+  - Ubuntu
+  - Visual Studio 2017
+
+environment:
+  APPVEYOR_YML_DISABLE_PS_LINUX: true
+
+init:
+  - cmd: git config --global core.autocrlf false
+
+install:
+  - sh: sudo apt update
+  - sh: sudo apt -y install gcc-multilib g++-multilib
+
+build_script:
+  - mkdir build_32 build_64
+  - sh: |
+      (
+        cd build_64
+        cmake -DCMAKE_BUILD_TYPE=Release ..
+        make
+      ) &
+      jobids="$!"
+  - sh: |
+      (
+        cd build_32
+        export CFLAGS="-m32"
+        export CXXFLAGS="-m32"
+        export LDFLAGS="-m32"
+        cmake -DCMAKE_BUILD_TYPE=Release ..
+        make
+      ) &
+      jobids="$jobids $!"
+  - sh: wait $jobids
+  - ps: |
+      Start-Job -Init ([ScriptBlock]::Create("Set-Location '$pwd\build_64'")) -Script {
+        cmake -G "Visual Studio 15 2017 Win64" ..
+        cmake --build . --config Release
+      }
+  - ps: |
+      Start-Job -Init ([ScriptBlock]::Create("Set-Location '$pwd\build_32'")) -Script {
+        cmake -G "Visual Studio 15 2017" ..
+        cmake --build . --config Release
+      }
+  - ps: Get-Job | Wait-Job | Receive-Job
+
+artifacts:
+  - path: '**\vcmp-squirrel-mmdb-*.so'
+  - path: '**\*.dll'
+
+deploy:
+  description: ''
+  provider: GitHub
+  auth_token:
+    secure: JFcBo1SYmjlb31U5qawX2pSSCXfnGYTjjjyr1Gv4DWnmiQQ43GT5RFFH2jS4lt+P
+  artifact: '/.*\.(so|dll)/'
+  draft: true
+  prerelease: false
