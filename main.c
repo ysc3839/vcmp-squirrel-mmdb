@@ -54,7 +54,7 @@ static uint8_t vcmp_on_plugin_command(uint32_t command_identifier, const char *m
 
 EXPORT uint32_t VcmpPluginInit(PluginFuncs* functions, PluginCallbacks* callbacks, PluginInfo* info)
 {
-	info->pluginVersion = 0x100; // 1.0.0
+	info->pluginVersion = 0x100; // 1.1.0
 	strncpy(info->name, "vcmp-squirrel-mmdb", sizeof(info->name));
 
 	info->apiMajorVersion = PLUGIN_API_MAJOR;
